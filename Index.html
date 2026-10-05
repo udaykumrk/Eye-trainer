@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Sight Word Eye Trainer</title>
+<style>
+:root{
+  --bg:#f7f1e3; --bg2:#efe6d3; --pan:#fffaf0; --ln:#e3d7c0;
+  --tx:#2f2a23; --dm:#7f7566; --ac:#0f766e; --acT:#ffffff; --warn:#b45309; --bad:#b91c1c;
+}
+body.sepia{ --bg:#eddfc4; --bg2:#e3d2b2; --pan:#f8eeda; --ln:#d6c1a0;
+  --tx:#3a2e21; --dm:#7c6b53; --ac:#9a3412; --acT:#fff; --warn:#92400e; --bad:#991b1b; }
+body.night{ --bg:#15171d; --bg2:#101318; --pan:#1c2029; --ln:#2c3242;
+  --tx:#ece7de; --dm:#8d94a3; --ac:#4ade80; --acT:#08150c; --warn:#fbbf24; --bad:#f87171; }
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;transition:background .3s}
+header{display:flex;gap:6px;padding:9px;overflow-x:auto;background:var(--pan);
+  border-bottom:1px solid var(--ln);position:sticky;top:0;z-index:20}
+header button{flex:0 0 auto;background:transparent;border:1px solid var(--ln);color:var(--dm);
+  border-radius:99px;padding:8px 15px;font-size:13px;font-weight:600}
+header button.on{background:var(--ac);color:var(--acT);border-color:transparent}
+.screen{display:none}.screen.on{display:block}
+
+#stage{position:relative;height:46vh;min-height:230px;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:
+   radial-gradient(120% 90% at 50% 42%, var(--pan) 0%, var(--bg) 58%, var(--bg2) 100%);
+  border-bottom:1px solid var(--ln)}
+#mid{position:absolute;left:8%;right:8%;top:50%;height:1px;background:var(--ln)}
+#pivot{position:absolute;top:calc(50% - 44px);left:50%;width:1px;height:88px;background:var(--ln);display:none}
+#setName{position:absolute;top:7%;left:0;right:0;text-align:center;color:var(--dm);
+  font-size:12px;letter-spacing:2.5px;text-transform:uppercase}
+#blink{position:absolute;top:16%;left:0;right:0;text-align:center;color:var(--warn);
+  font-size:12px;letter-spacing:3px;opacity:0;transition:opacity .25s}
+#hint{position:absolute;bottom:7%;left:0;right:0;display:flex;justify-content:space-between;
+  padding:0 7vw;color:var(--dm);font-size:12.5px;letter-spacing:1px;opacity:0;transition:opacity .3s}
+
+#disp{z-index:3;line-height:1;white-space:pre;will-change:transform;text-align:center}
+#disp.letters{font-family:ui-monospace,"SF Mono","Courier New",monospace;font-weight:700;
+  font-size:clamp(54px,15vw,140px);letter-spacing:.04em;color:var(--tx);background:none}
+#disp.letters .dm{opacity:.18}
+#disp.letters .hot{color:var(--ac)}
+#disp.card{font-weight:800;color:#33302a;padding:min(9vh,62px) min(9vw,74px);border-radius:34px;
+  border:5px solid rgba(255,255,255,.8);min-width:48vw;
+  box-shadow:0 16px 38px rgba(90,70,40,.22), inset 0 3px 0 rgba(255,255,255,.85)}
+body.night #disp.card{box-shadow:0 18px 44px rgba(0,0,0,.55), inset 0 3px 0 rgba(255,255,255,.6)}
+#disp.blank{opacity:0;background:none!important;border-color:transparent;box-shadow:none}
+#disp.pop{animation:pop .3s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{transform:scale(.87) rotate(-1.5deg);opacity:0}to{transform:scale(1);opacity:1}}
+
+#bar{height:5px;background:var(--ln)}#barIn{height:100%;width:0;background:var(--ac);transition:width .2s}
+#hud{display:flex;flex-wrap:wrap;gap:13px;justify-content:center;padding:9px;color:var(--dm);font-size:12px}
+#hud b{color:var(--tx);font-variant-numeric:tabular-nums}
+
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:11px 9px}
+.row.top{border-top:1px solid var(--ln)}
+.row button{background:var(--pan);border:1px solid var(--ln);color:var(--tx);border-radius:12px;
+  padding:11px 15px;font-size:14.5px;font-weight:600}
+.row button.p{background:var(--ac);color:var(--acT);border-color:transparent}
+.cap{width:100%;text-align:center;color:var(--dm);font-size:10.5px;letter-spacing:1.4px;
+  text-transform:uppercase;margin-bottom:2px}
+section{margin:11px 10px;background:var(--pan);border:1px solid var(--ln);border-radius:16px;padding:13px 15px}
+h2{font-size:11.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dm);margin:2px 0 11px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--dm)}
+input,select{background:var(--bg);color:var(--tx);border:1px solid var(--ln);border-radius:10px;
+  padding:9px;font:inherit;font-size:14px;width:100%}
+label.c{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:14px}
+label.c input{width:auto}
+small{color:var(--dm);font-size:12px;display:block;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:7px 4px;border-bottom:1px solid var(--ln);text-align:left}
+th{color:var(--dm);font-size:10.5px;text-transform:uppercase;letter-spacing:.7px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--bg2);color:var(--dm)}
+.mini{height:8px;background:var(--bg2);border-radius:9px;overflow:hidden;margin-top:5px}
+.mini i{display:block;height:100%;background:var(--ac)}
+.card2{background:var(--bg);border:1px solid var(--ln);border-radius:13px;padding:10px 12px}
+.card2 div{font-size:22px;font-weight:800}
+p{margin:0 0 10px}
+
+#ov{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:26px;z-index:40}
+#ov.on{display:flex}
+#ovT{font-size:clamp(21px,6vw,32px);font-weight:800;max-width:640px}
+#ovS{color:var(--dm);margin-top:13px;max-width:520px}
+#ovN{font-size:54px;font-weight:800;color:var(--ac);margin-top:16px;font-variant-numeric:tabular-nums}
+
+#d16{position:fixed;inset:0;background:
+  radial-gradient(120% 90% at 50% 38%, var(--pan) 0%, var(--bg) 60%, var(--bg2) 100%);
+  z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:16px}
+#d16.on{display:flex}
+#d16 .set{color:var(--dm);font-size:11.5px;letter-spacing:3px}
+#d16 .mode{font-size:clamp(22px,7vw,40px);font-weight:800;margin:6px 0 3px}
+#d16 .dir{font-size:clamp(11px,3.4vw,15px);color:var(--ac);letter-spacing:2px;font-weight:700}
+#d16 .goal{color:var(--dm);font-size:14px;margin-top:7px;max-width:430px}
+#d16 .cd{font-size:clamp(50px,17vw,104px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1;margin:11px 0 2px}
+#d16 .tot{color:var(--dm);font-size:11.5px;letter-spacing:1px}
+#d16 .pb{width:min(560px,86vw);height:7px;background:var(--ln);border-radius:9px;margin:13px 0;overflow:hidden}
+#d16 .pb i{display:block;height:100%;background:var(--ac);width:0}
+#c16{display:none;font-weight:800;color:#33302a;padding:min(5vh,32px) min(8vw,54px);border-radius:28px;
+  border:5px solid rgba(255,255,255,.8);min-width:40vw;margin:6px 0;
+  box-shadow:0 14px 34px rgba(90,70,40,.22), inset 0 3px 0 rgba(255,255,255,.85)}
+</style>
+</head>
+<body>
+
+<header>
+  <button data-t="train" class="on">Train</button>
+  <button data-t="hard">Hard words</button>
+  <button data-t="stats">Progress</button>
+  <button data-t="set">Settings</button>
+  <button data-t="help">Eye care</button>
+</header>
+
+<!-- ===== TRAIN ===== -->
+<div class="screen on" id="s-train">
+  <div id="stage">
+    <div id="mid"></div><div id="pivot"></div>
+    <div id="setName"></div><div id="blink">BLINK</div>
+    <div id="disp" class="letters">ready</div>
+    <div id="hint"></div>
+  </div>
+  <div id="bar"><div id="barIn"></div></div>
+  <div id="hud">
+    <span>word <b id="hW">0</b>/<b id="hT">0</b></span>
+    <span>speed <b id="hX">1x</b></span>
+    <span><b id="hG">–</b> ms</span>
+    <span><b id="hM">–</b> wpm</span>
+    <span>tap <b id="hR">–</b> ms</span>
+    <span><b id="hTi">0:00</b></span>
+  </div>
+
+  <div class="row"><div class="cap">choose a list</div><span id="listRow"></span></div>
+  <div class="row top"><div class="cap">speed — stays fixed until you change it</div><span id="spdRow"></span></div>
+  <div class="row top"><div class="cap">style</div><span id="rRow"></span></div>
+  <div class="row top"><div class="cap">16-minute drill · 4 sets × 4 min</div><span id="d16Row"></span></div>
+  <div class="row top">
+    <button id="go" class="p">Start</button>
+    <button id="rs">Restart</button>
+    <button id="wu">Eye warm-up</button>
+    <button id="th">Colours</button>
+  </div>
+
+  <section>
+    <h2>Drill method (used by the Normal style)</h2>
+    <select id="mode">
+      <option value="word">Whole word — one word at a time (sight reading)</option>
+      <option value="flash">Letters in one spot — eye stays still</option>
+      <option value="build">Letters build up on the reading point</option>
+      <option value="sacc">Letters jump left to right — eye agility</option>
+      <option value="span">Letters push outwards — wider vision</option>
+      <option value="chunk">Letter chunks — 2 or 3 at a time</option>
+    </select>
+    <small id="modeInfo"></small>
+  </section>
+
+  <section>
+    <h2>Word set</h2>
+    <div id="lv"></div>
+    <label class="c"><input type="checkbox" id="mixHard"> Mix in my hard words</label>
+    <label class="c"><input type="checkbox" id="shuf"> Shuffle order</label>
+    <label class="c"><input type="checkbox" id="loop"> Loop forever</label>
+  </section>
+</div>
+
+<!-- ===== HARD ===== -->
+<div class="screen" id="s-hard">
+  <section>
+    <h2>Words you found hard or read slowly</h2>
+    <div class="row" style="padding:0 0 10px">
+      <button class="p" id="drillHard">Practise these — slower</button>
+      <button id="clrHard">Clear list</button>
+    </div>
+    <div id="hardTbl"></div>
+    <small>Tap the middle of the black reading area to save a hard word. In Flashcards style, slow taps get saved on their own. A word leaves the list after a few good reads.</small>
+  </section>
+</div>
+
+<!-- ===== STATS ===== -->
+<div class="screen" id="s-stats">
+  <section><h2>Overall</h2><div id="ov1" class="g"></div></section>
+  <section><h2>Mastery by list</h2><div id="ov2"></div></section>
+  <section><h2>Slowest words</h2><div id="ov3"></div></section>
+  <section><h2>Backup</h2>
+    <div class="row" style="padding:0">
+      <button id="exp">Save progress to file</button>
+      <button id="imp">Restore from file</button>
+      <button id="wipe">Erase all</button>
+    </div>
+    <input type="file" id="file" accept=".json" style="display:none">
+  </section>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div class="screen" id="s-set">
+  <section><h2>Colours</h2>
+    <select id="theme">
+      <option value="">Cream — soft paper (easiest for long reading)</option>
+      <option value="sepia">Sepia — warm amber</option>
+      <option value="night">Night — dark, low light</option>
+    </select>
+    <label class="c" style="margin-top:8px"><input type="checkbox" id="pastel" checked> Pastel colour cards</label>
+  </section>
+  <section><h2>Speed</h2>
+    <div class="g">
+      <label class="f">Base time at 1x (ms)<input type="number" id="base" value="500" min="80" max="2500" step="10"></label>
+      <label class="f">Words per round before AUTO speeds up<input type="number" id="every" value="0" min="0" max="500"></label>
+      <label class="f">Gap between words (× base)<input type="number" id="wp" value="0.5" min="0" max="6" step="0.1"></label>
+      <label class="f">Slow tap = slower than<select id="slowF">
+        <option value="1.3">1.3× my average</option><option value="1.5" selected>1.5×</option><option value="2">2×</option></select></label>
+    </div>
+    <small>AUTO only speeds up after a whole list is finished, never in the middle.</small>
+  </section>
+  <section><h2>Display</h2>
+    <div class="g">
+      <label class="f">Letter size %<input type="number" id="fs" value="100" min="40" max="200" step="5"></label>
+      <label class="f">Jump distance (vw)<input type="number" id="spread" value="13" min="4" max="30"></label>
+      <label class="f">Letters per chunk<input type="number" id="chunk" value="2" min="2" max="4"></label>
+    </div>
+    <label class="c"><input type="checkbox" id="mask"> Flash dots between letters</label>
+    <label class="c"><input type="checkbox" id="caps"> UPPERCASE</label>
+    <label class="c"><input type="checkbox" id="voice"> Speak the word</label>
+  </section>
+  <section><h2>Eye safety</h2>
+    <div class="g">
+      <label class="f">Rest break every (min)<input type="number" id="restMin" value="8" min="2" max="30"></label>
+      <label class="f">Break length (sec)<input type="number" id="restSec" value="20" min="10" max="60"></label>
+    </div>
+    <label class="c"><input type="checkbox" id="blinkCue" checked> BLINK reminder</label>
+    <label class="c"><input type="checkbox" id="restOn" checked> Force 20-20-20 breaks</label>
+    <label class="c"><input type="checkbox" id="sound" checked> Beeps in the 16-minute drill</label>
+  </section>
+</div>
+
+<!-- ===== HELP ===== -->
+<div class="screen" id="s-help">
+  <section><h2>How to use it</h2>
+  <p>Sit an arm's length from the screen, letters at or just below eye level, room light on. Do the eye warm-up, then eight to ten minutes of drilling, then stop. Two short sessions a day beat one long one.</p>
+  <p>Three taps to start: pick a list, pick a speed, pick a style. Tap the middle of the reading area whenever a word feels hard — it gets saved for you.</p>
+  <p>Grow slowly. Stay on 1x until words feel easy, then 1.5x, then 2x. Move to the letter methods only when whole words at 3x feel comfortable.</p>
+  <p>Stop if you get dry eyes, headache or blurring, and rest. Drills should feel like effort, never strain. If blurring or headaches keep coming back, get an eye test — a small uncorrected focus error is the most common reason reading feels slow.</p>
+  </section>
+</div>
+
+<div id="ov"><div id="ovT"></div><div id="ovS"></div><div id="ovN"></div>
+  <div class="row"><button id="ovX">Skip</button></div></div>
+
+<div id="d16">
+  <div class="set" id="d16set"></div><div class="mode" id="d16mode"></div>
+  <div class="dir" id="d16dir"></div><div class="goal" id="d16goal"></div>
+  <div class="cd" id="d16cd">0:00</div><div class="tot" id="d16tot"></div>
+  <div class="pb"><i id="d16pb"></i></div><div id="c16"></div>
+  <div class="row"><button id="d16p">Pause</button><button id="d16s">Skip</button><button id="d16x">Stop</button></div>
+</div>
+
+<script>
+/* ================= WORD LISTS ================= */
+var LEVELS={
+ pre:{n:"Dolch Pre-Primer",s:"Dolch",w:["a","and","away","big","blue","can","come","down","find","for","funny","go","help","here","I","in","is","it","jump","little","look","make","me","my","not","one","play","red","run","said","see","the","three","to","two","up","we","where","yellow","you"]},
+ pri:{n:"Dolch Primer",s:"Dolch",w:["all","am","are","at","ate","be","black","brown","but","came","did","do","eat","four","get","good","have","he","into","like","must","new","no","now","on","our","out","please","pretty","ran","ride","saw","say","she","so","soon","that","there","they","this","too","under","want","was","well","went","what","white","who","will","with","yes"]},
+ g1:{n:"Dolch 1st Grade",s:"Dolch",w:["after","again","an","any","as","ask","by","could","every","fly","from","give","going","had","has","her","him","his","how","just","know","let","live","may","of","old","once","open","over","put","round","some","stop","take","thank","them","then","think","walk","were","when"]},
+ g2:{n:"Dolch 2nd Grade",s:"Dolch",w:["always","around","because","been","before","best","both","buy","call","cold","does","don't","fast","first","five","found","gave","goes","green","its","made","many","off","or","pull","read","right","sing","sit","sleep","tell","their","these","those","upon","us","use","very","wash","which","why","wish","work","would","write","your"]},
+ g3:{n:"Dolch 3rd Grade",s:"Dolch",w:["about","better","bring","carry","clean","cut","done","draw","drink","eight","fall","far","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","own","pick","seven","shall","show","six","small","start","ten","today","together","try","warm"]},
+ f1:{n:"Fry 1–50",s:"Fry",w:["the","of","and","a","to","in","is","you","that","it","he","was","for","on","are","as","with","his","they","I","at","be","this","have","from","or","one","had","by","word","but","not","what","all","were","we","when","your","can","said","there","use","an","each","which","she","do","how","their","if"]},
+ f2:{n:"Fry 51–100",s:"Fry",w:["will","up","other","about","out","many","then","them","these","so","some","her","would","make","like","him","into","time","has","look","two","more","write","go","see","number","no","way","could","people","my","than","first","water","been","call","who","oil","its","now","find","long","down","day","did","get","come","made","may","part"]},
+ f3:{n:"Fry 101–150",s:"Fry",w:["over","new","sound","take","only","little","work","know","place","year","live","me","back","give","most","very","after","thing","our","just","name","good","sentence","man","think","say","great","where","help","through","much","before","line","right","too","mean","old","any","same","tell","boy","follow","came","want","show","also","around","form","three","small"]},
+ f4:{n:"Fry 151–200",s:"Fry",w:["set","put","end","does","another","well","large","must","big","even","such","because","turn","here","why","ask","went","men","read","need","land","different","home","us","move","try","kind","hand","picture","again","change","off","play","spell","air","away","animal","house","point","page","letter","mother","answer","found","study","still","learn","should","America","world"]}
+};
+var ORDER=["pre","pri","g1","g2","g3","f1","f2","f3","f4"];
+var INFO={
+ word:"A whole word appears for a moment, then it is gone. This is real sight-word reading — the main drill.",
+ flash:"Every letter lands on the same spot, so your eye must not move at all. Only your brain gets faster.",
+ build:"The word sits on its reading point, just left of centre, where a reader's eye naturally lands.",
+ sacc:"Letters step across the line so your eye makes small controlled jumps. Trains aim and speed.",
+ span:"Letters move further out while you keep looking at the middle. Widens how much you take in at once.",
+ chunk:"Two or three letters at once — the bridge between spelling and seeing whole words."
+};
+
+/* ================= STORAGE ================= */
+var KEY='eyeTrainer_v4';
+var DEF={base:500,every:0,wp:0.5,slowF:1.5,fs:100,spread:13,chunk:2,mask:0,caps:0,voice:0,
+ restMin:8,restSec:20,blinkCue:1,restOn:1,sound:1,mode:'word',theme:'',pastel:1,
+ lv:{pre:1},mixHard:0,shuf:0,loop:0,sIdx:0};
+var DB={stats:{},set:{},tot:{words:0,best:1,sessions:0}};
+try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);
+ DB.stats=p.stats||{};DB.set=p.set||{};DB.tot=Object.assign(DB.tot,p.tot||{});}}catch(e){}
+var S={};for(var k in DEF)S[k]=(DB.set[k]!==undefined)?DB.set[k]:DEF[k];
+if(!S.lv||typeof S.lv!=='object')S.lv={pre:1};
+function save(){DB.set=S;try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+function $(i){return document.getElementById(i)}
+
+/* ================= SETTINGS UI ================= */
+var NUM=['base','every','wp','fs','spread','chunk','restMin','restSec'];
+var CHK=['mask','caps','voice','blinkCue','restOn','sound','pastel','mixHard','shuf','loop'];
+function ui(){
+  NUM.forEach(function(x){$(x).value=S[x]});
+  CHK.forEach(function(x){$(x).checked=!!S[x]});
+  $('mode').value=S.mode; $('slowF').value=S.slowF; $('theme').value=S.theme;
+  document.body.className=S.theme;
+  $('modeInfo').textContent=INFO[S.mode];
+  $('pivot').style.display=(S.mode==='build')?'block':'none';
+  syncLv(); paintSpd(); paintList();
+}
+NUM.forEach(function(x){$(x).onchange=function(e){S[x]=parseFloat(e.target.value);
+  if(isNaN(S[x]))S[x]=DEF[x];save();ui()}});
+CHK.forEach(function(x){$(x).onchange=function(e){S[x]=e.target.checked?1:0;save();
+  if(x==='shuf'||x==='mixHard')reset()}});
+$('mode').onchange=function(e){S.mode=e.target.value;save();ui();reset()};
+$('slowF').onchange=function(e){S.slowF=parseFloat(e.target.value);save()};
+$('theme').onchange=function(e){S.theme=e.target.value;save();ui()};
+$('th').onclick=function(){var t=['','sepia','night'];S.theme=t[(t.indexOf(S.theme)+1)%3];save();ui()};
+
+var lvBox=$('lv'),lvChk={};
+['Dolch','Fry'].forEach(function(grp){
+  var h=document.createElement('div');
+  h.style.cssText='color:var(--dm);font-size:10.5px;letter-spacing:1.3px;margin:10px 0 3px';
+  h.textContent=grp.toUpperCase()+' WORDS'; lvBox.appendChild(h);
+  ORDER.forEach(function(key){
+    if(LEVELS[key].s!==grp)return;
+    var l=document.createElement('label');l.className='c';
+    var c=document.createElement('input');c.type='checkbox';
+    c.onchange=function(){S.lv[key]=c.checked?1:0;save();reset()};
+    l.appendChild(c);l.appendChild(document.createTextNode(' '+LEVELS[key].n+' ('+LEVELS[key].w.length+')'));
+    lvBox.appendChild(l);lvChk[key]=c;
+  });
+});
+function syncLv(){ORDER.forEach(function(key){lvChk[key].checked=!!S.lv[key]})}
+
+/* ================= TABS ================= */
+Array.prototype.forEach.call(document.querySelectorAll('header button'),function(b){
+  b.onclick=function(){
+    Array.prototype.forEach.call(document.querySelectorAll('header button'),function(x){
+      x.classList.toggle('on',x===b)});
+    Array.prototype.forEach.call(document.querySelectorAll('.screen'),function(s){
+      s.classList.toggle('on',s.id==='s-'+b.dataset.t)});
+    if(b.dataset.t==='stats')drawStats();
+    if(b.dataset.t==='hard')drawHard();
+    if(b.dataset.t!=='train'&&running&&!paused)pause();
+    window.scrollTo(0,0);
+  };
+});
+
+/* ================= TIMING ================= */
+var pend=[],abort=false,paused=false,running=false;
+function sleep(ms){return new Promise(function(res){
+  var o={res:res};o.t=setTimeout(function(){o.res();pend=pend.filter(function(x){return x!==o})},ms);
+  pend.push(o)})}
+function flush(){pend.forEach(function(o){clearTimeout(o.t);o.res()});pend=[];
+  if(tapRes){var r=tapRes;tapRes=null;r(null)}}
+async function gate(){while(paused&&!abort)await sleep(90)}
+
+/* ================= DISPLAY ================= */
+var D=$('disp'),hint=$('hint');
+var PAS=['linear-gradient(160deg,#ffe1ea,#ffc9d6)','linear-gradient(160deg,#e0f1ff,#c3e2fb)',
+ 'linear-gradient(160deg,#e3f7e5,#c6ecd0)','linear-gradient(160deg,#fff5d8,#ffe6b0)',
+ 'linear-gradient(160deg,#ece3ff,#d9cbfb)','linear-gradient(160deg,#daf5f2,#bfe9e4)',
+ 'linear-gradient(160deg,#ffeadc,#ffd8bd)','linear-gradient(160deg,#f1e8de,#e2d5c6)'];
+var ci=0;
+function card(s){
+  D.className='card pop';
+  D.style.transform='none';
+  D.style.fontSize='clamp(28px,'+Math.min(14,90/Math.max(2,s.length))+'vw,110px)';
+  D.style.background=S.pastel?PAS[ci++%PAS.length]:'var(--pan)';
+  D.style.animation='none';void D.offsetWidth;D.style.animation='pop .3s cubic-bezier(.2,1.3,.4,1)';
+  D.textContent=s;
+}
+function blank(){D.className='blank';D.textContent='';D.style.background='none'}
+function letters(t,offVw){
+  D.className='letters';D.style.background='none';
+  D.style.fontSize='calc(clamp(54px,15vw,140px) * '+(S.fs/100)+')';
+  D.style.transform='translateX('+(offVw||0)+'vw)';D.textContent=t;
+}
+function letterSpans(s,idx,offCh){
+  D.className='letters';D.style.background='none';
+  D.style.fontSize='calc(clamp(54px,15vw,140px) * '+(S.fs/100)+')';
+  D.style.transform='translateX('+offCh+'ch)';D.textContent='';
+  for(var i=0;i<s.length;i++){var e=document.createElement('span');
+    e.textContent=s[i];e.className=(i===idx)?'hot':(i<idx?'':'dm');D.appendChild(e)}
+}
+function orp(n){return n<=1?0:n<=5?1:n<=9?2:3}
+function fitK(n,sp){var half=(n-1)/2*sp;return half>40?40/half:1}
+
+/* ================= SPEED (locked) ================= */
+var STEPS=[1,1.5,2,2.5,3,4,5],sIdx=S.sIdx||0,autoStep=false,slowMode=false;
+function mult(){return STEPS[sIdx]}
+function unit(){var g=S.base/mult();if(slowMode)g*=1.5;return Math.max(60,g)}
+var spdBtns=[],autoB;
+STEPS.forEach(function(m,i){
+  var b=document.createElement('button');b.textContent=m+'x';
+  b.onclick=function(){autoStep=false;sIdx=i;S.sIdx=i;save();paintSpd();hud()};
+  $('spdRow').appendChild(b);spdBtns.push(b);
+});
+autoB=document.createElement('button');autoB.textContent='AUTO';
+autoB.onclick=function(){autoStep=true;sIdx=0;S.sIdx=0;save();paintSpd();hud()};
+$('spdRow').appendChild(autoB);
+function paintSpd(){
+  spdBtns.forEach(function(b,i){b.classList.toggle('p',i===sIdx&&!autoStep)});
+  autoB.classList.toggle('p',autoStep);
+  $('hX').textContent=mult()+'x'+(autoStep?' auto':'');
+}
+
+/* ================= STYLE / ROUTINES ================= */
+var manual=false,fixedSec=0,roundLimit=0,timeLimit=0,tStart=0;
+var rBtns=[];
+function routine(label,cfg){
+  var b=document.createElement('button');b.textContent=label;
+  b.onclick=function(){
+    manual=!!cfg.manual;fixedSec=cfg.sec||0;
+    roundLimit=cfg.rounds||0;timeLimit=cfg.mins||0;
+    if(cfg.shuf)S.shuf=1;
+    S.loop=(roundLimit||timeLimit)?1:S.loop;save();ui();
+    rBtns.forEach(function(x){x.classList.toggle('p',x===b)});
+    reset();setTimeout(function(){start()},160);
+  };
+  $('rRow').appendChild(b);rBtns.push(b);
+}
+routine('Flashcards · tap',{manual:1,shuf:1,mins:120});
+routine('Slides 3 sec',{sec:3,shuf:1,rounds:3});
+routine('Slides 2 sec',{sec:2,shuf:1,rounds:3});
+routine('Slides 1 sec',{sec:1,shuf:1,rounds:3});
+routine('Normal',{});
+
+/* ================= TAPS ================= */
+var tapRes=null,tapAt=0,lastWord=null;
+function waitTap(){tapAt=performance.now();
+  hint.innerHTML='<span>&#9664; hard</span><span>next &#9654;</span>';hint.style.opacity=1;
+  return new Promise(function(r){tapRes=r})}
+$('stage').onclick=function(e){
+  if(tapRes){var r=tapRes;tapRes=null;hint.style.opacity=0;
+    r({hard:e.clientX<window.innerWidth/2,rt:performance.now()-tapAt});return}
+  if(lastWord)markHard(lastWord);
+};
+
+/* ================= SCORING ================= */
+var RT=[];
+function med(a){if(!a.length)return 0;var b=a.slice().sort(function(x,y){return x-y});return b[b.length>>1]}
+function st(w){if(!DB.stats[w])DB.stats[w]={s:0,m:0,rt:0,slow:0,box:1};return DB.stats[w]}
+function markHard(w){var o=st(w);o.m++;o.box=1;save();
+  hint.innerHTML='<span>saved &#10003; '+w+'</span>';hint.style.opacity=1;
+  setTimeout(function(){if(!tapRes)hint.style.opacity=0},900)}
+function good(w,rt){
+  var o=st(w);o.s++;
+  var slow=false;
+  if(rt){o.rt=o.rt?(o.rt*0.6+rt*0.4):rt;var m=med(RT);
+    if(m&&rt>m*S.slowF)slow=true;RT.push(rt);if(RT.length>60)RT.shift();
+    $('hR').textContent=Math.round(rt)}
+  if(slow){o.slow++;o.box=Math.max(1,o.box-1)}
+  else{o.box=Math.min(5,o.box+1);if(mult()>DB.tot.best)DB.tot.best=mult()}
+  DB.tot.words++;save();
+}
+function hardList(){
+  return Object.keys(DB.stats).filter(function(w){var o=DB.stats[w];return o.box<=2&&(o.m>0||o.slow>0)})
+   .sort(function(a,b){var A=DB.stats[a],B=DB.stats[b];return (B.m*3+B.slow*2)-(A.m*3+A.slow*2)});
+}
+
+/* ================= QUEUE ================= */
+var Q=[],qi=0,done=0,rounds=0,el=0,t0=0,clk=null,restT=0,forced=null;
+function buildQ(){
+  if(forced)return forced.slice();
+  var w=[];ORDER.forEach(function(key){if(S.lv[key])w=w.concat(LEVELS[key].w)});
+  if(!w.length)w=LEVELS.pre.w.slice();
+  if(S.mixHard){var h=hardList();for(var i=0;i<h.length;i++)w.splice(Math.min(w.length,3+i*4),0,h[i])}
+  var seen={},out=[];
+  for(var j=0;j<w.length;j++){var lw=w[j].toLowerCase();if(!seen[lw]){seen[lw]=1;out.push(w[j])}}
+  if(S.shuf)for(var i2=out.length-1;i2>0;i2--){var r=Math.random()*(i2+1)|0;
+    var t=out[i2];out[i2]=out[r];out[r]=t}
+  return out;
+}
+function paintList(){
+  var on=ORDER.filter(function(k){return S.lv[k]});
+  $('setName').textContent=forced?'MY HARD WORDS':(on.length===1?LEVELS[on[0]].n:(on.length?on.length+' lists mixed':''));
+  listBtns.forEach(function(o){o.b.classList.toggle('p',!forced&&on.length===1&&on[0]===o.k)});
+}
+var listBtns=[];
+ORDER.forEach(function(key){
+  var b=document.createElement('button');b.textContent=LEVELS[key].n.replace('Dolch ','');
+  b.onclick=function(){
+    forced=null;ORDER.forEach(function(k){S.lv[k]=0});S.lv[key]=1;save();ui();
+    reset();setTimeout(function(){start()},150);
+  };
+  $('listRow').appendChild(b);listBtns.push({k:key,b:b});
+});
+function hud(){
+  $('hW').textContent=done;$('hT').textContent=Q.length;
+  $('hG').textContent=Math.round(unit());
+  var mn=el/60000;$('hM').textContent=mn>0.05?Math.round(done/mn):'–';
+  $('barIn').style.width=(100*Math.min(1,qi/Math.max(1,Q.length)))+'%';
+  paintSpd();
+}
+function clock(on){if(clk){clearInterval(clk);clk=null}if(!on)return;t0=Date.now()-el;
+  clk=setInterval(function(){el=Date.now()-t0;var s=el/1000|0;
+    $('hTi').textContent=(s/60|0)+':'+String(s%60).padStart(2,'0');hud()},250)}
+
+/* ================= OVERLAY ================= */
+var ovSkip=null;
+$('ovX').onclick=function(){if(ovSkip)ovSkip()};
+async function overlay(t,s,secs){
+  $('ovT').textContent=t;$('ovS').textContent=s||'';$('ov').classList.add('on');
+  var sk=false;ovSkip=function(){sk=true;flush()};
+  for(var i=secs;i>0&&!sk&&!abort;i--){$('ovN').textContent=i;await sleep(1000)}
+  $('ov').classList.remove('on');ovSkip=null;
+}
+$('wu').onclick=async function(){
+  if(running)return;abort=false;
+  var steps=[["Look far away","Find the furthest thing you can see. Let your eyes rest on it.",15],
+   ["Slow blinks","Close gently, hold two seconds, open. Keep going.",12],
+   ["Figure of eight","Trace a big lazy 8 on the wall with your eyes. Head still.",15],
+   ["Near and far","Thumb at 20 cm, then something across the room. Swap every 2 seconds.",15],
+   ["Palming","Cover your closed eyes with your palms. No pressure. Just dark and warm.",15],
+   ["Ready","Sit an arm's length away. Keep your head still during the drill.",4]];
+  for(var i=0;i<steps.length&&!abort;i++)await overlay(steps[i][0],steps[i][1],steps[i][2]);
+};
+
+/* ================= SHOW ONE WORD ================= */
+async function showWord(w){
+  var s=S.caps?w.toUpperCase():w,u=unit(),n=s.length,m=S.mode,sp=S.spread,K=fitK(n,sp);
+  if(manual){
+    card(s);var r=await waitTap();
+    if(r){if(r.hard)markHard(w);else good(w,r.rt)}
+    blank();await sleep(130);return;
+  }
+  if(fixedSec){card(s);await sleep(Math.max(220,fixedSec*1000-150));blank();await sleep(150);good(w,0);return}
+  if(m==='word'){card(s);await sleep(u*1.7);blank();await sleep(u*0.35);good(w,0);return}
+  if(m==='chunk'){
+    for(var i=0;i<n;i+=S.chunk){await gate();if(abort)return;
+      letters(s.substr(i,S.chunk),0);await sleep(u*1.25);
+      if(S.mask){letters('\u00b7'.repeat(Math.min(S.chunk,n-i)),0);await sleep(u*0.3)}}
+    good(w,0);return;
+  }
+  if(m==='build'){
+    var off=-(orp(n)-(n-1)/2);
+    for(var j=0;j<n;j++){await gate();if(abort)return;letterSpans(s,j,off);await sleep(u)}
+    good(w,0);return;
+  }
+  for(var q=0;q<n;q++){
+    await gate();if(abort)return;
+    var o=0;
+    if(m==='sacc')o=(q-(n-1)/2)*sp*K;
+    if(m==='span')o=(q%2?1:-1)*sp*K*(0.35+0.65*(q+1)/n);
+    letters(s[q],o);await sleep(u);
+    if(S.mask){letters('\u00b7',o);await sleep(u*0.32)}
+  }
+  good(w,0);
+}
+
+/* ================= SESSION ================= */
+async function session(){
+  running=true;abort=false;paused=false;$('go').textContent='Pause';
+  DB.tot.sessions++;save();clock(true);restT=el;tStart=Date.now();
+  while(!abort){
+    await gate();if(abort)break;
+    if(timeLimit&&(Date.now()-tStart)/1000>timeLimit){return finish('time up')}
+    if(qi>=Q.length){
+      rounds++;
+      if(roundLimit&&rounds>=roundLimit)return finish('rounds done');
+      if(!S.loop&&!roundLimit)return finish('list finished');
+      qi=0;if(autoStep&&sIdx<STEPS.length-1){sIdx++;paintSpd()}
+      if(S.shuf)Q=buildQ();
+    }
+    var w=Q[qi];lastWord=w;hud();
+    await showWord(w);if(abort)break;
+    if(S.voice&&window.speechSynthesis){try{var u2=new SpeechSynthesisUtterance(w);u2.rate=.95;
+      speechSynthesis.speak(u2)}catch(e){}}
+    done++;qi++;hud();
+    if(S.blinkCue&&done%5===0){$('blink').style.opacity=1;
+      sleep(500).then(function(){$('blink').style.opacity=0})}
+    if(S.restOn&&el-restT>S.restMin*60000){restT=el;
+      await overlay('Rest your eyes','Look at something at least 6 metres away and blink slowly until the timer ends.',S.restSec)}
+    if(!manual)await sleep(Math.max(0,unit()*S.wp));
+  }
+}
+function start(){if(!Q.length)Q=buildQ();
+  if(paused){paused=false;$('go').textContent='Pause';clock(true);return}
+  if(!running)session()}
+function pause(){paused=true;$('go').textContent='Resume';clock(false);flush()}
+function reset(){
+  abort=true;flush();running=false;paused=false;clock(false);
+  Q=buildQ();qi=0;done=0;rounds=0;el=0;RT=[];
+  letters('ready',0);hint.style.opacity=0;$('hTi').textContent='0:00';$('hR').textContent='–';
+  $('go').textContent='Start';paintList();hud();
+  setTimeout(function(){abort=false},70);
+}
+function finish(msg){
+  running=false;abort=true;flush();clock(false);$('go').textContent='Start';
+  D.className='letters';D.style.transform='none';D.style.background='none';
+  D.style.fontSize='clamp(24px,6.5vw,46px)';
+  D.textContent=(msg||'done')+' \u00b7 '+done+' words';
+  var h=hardList().length;
+  hint.innerHTML='<span></span><span>'+mult()+'x'+(h?' \u00b7 '+h+' hard words saved':'')+'</span>';
+  hint.style.opacity=1;
+  setTimeout(function(){abort=false},80);
+}
+$('go').onclick=function(){if(!running)start();else if(paused)start();else pause()};
+$('rs').onclick=function(){forced=null;slowMode=false;manual=false;fixedSec=0;
+  roundLimit=0;timeLimit=0;rBtns.forEach(function(x){x.classList.remove('p')});reset()};
+addEventListener('keydown',function(e){
+  if(e.code==='Space'){e.preventDefault();$('go').click()}
+  if(e.key==='h'||e.key==='H'){if(lastWord)markHard(lastWord)}
+  if(e.key==='r'||e.key==='R')$('rs').click();
+  if(e.key==='ArrowUp'){e.preventDefault();autoStep=false;sIdx=Math.min(6,sIdx+1);S.sIdx=sIdx;save();paintSpd();hud()}
+  if(e.key==='ArrowDown'){e.preventDefault();autoStep=false;sIdx=Math.max(0,sIdx-1);S.sIdx=sIdx;save();paintSpd();hud()}
+  if(tapRes&&(e.key==='j'||e.key==='J')){var r=tapRes;tapRes=null;hint.style.opacity=0;
+    r({hard:false,rt:performance.now()-tapAt})}
+  if(tapRes&&(e.key==='f'||e.key==='F')){var r2=tapRes;tapRes=null;hint.style.opacity=0;
+    r2({hard:true,rt:performance.now()-tapAt})}
+});
+
+/* ================= HARD WORDS ================= */
+function drawHard(){
+  var l=hardList(),box=$('hardTbl');box.textContent='';
+  if(!l.length){box.innerHTML='<small>Nothing here yet.</small>';return}
+  var t=document.createElement('table');
+  t.innerHTML='<tr><th>Word</th><th>Hard</th><th>Slow</th><th>Tap time</th><th>Level</th></tr>';
+  l.forEach(function(w){var o=DB.stats[w],r=t.insertRow();
+    r.innerHTML='<td><b>'+w+'</b></td><td>'+o.m+'</td><td>'+o.slow+'</td><td>'+
+      (o.rt?Math.round(o.rt)+' ms':'–')+'</td><td><span class="tag">box '+o.box+'/5</span></td>'});
+  box.appendChild(t);
+}
+$('drillHard').onclick=function(){
+  var l=hardList();if(!l.length){alert('No hard words saved yet.');return}
+  forced=l.slice();slowMode=true;manual=true;fixedSec=0;roundLimit=0;timeLimit=0;
+  reset();document.querySelector('header button[data-t="train"]').click();
+  setTimeout(function(){start()},170);
+};
+$('clrHard').onclick=function(){if(confirm('Clear the hard-word list?')){
+  hardList().forEach(function(w){DB.stats[w].box=3;DB.stats[w].m=0;DB.stats[w].slow=0});save();drawHard()}};
+
+/* ================= STATS ================= */
+function drawStats(){
+  var ws=Object.keys(DB.stats),mast=ws.filter(function(w){return DB.stats[w].box>=4}).length;
+  var rts=ws.filter(function(w){return DB.stats[w].rt}).map(function(w){return DB.stats[w].rt});
+  var cards=[['Words seen',ws.length],['Mastered',mast],['Total reps',DB.tot.words],
+   ['Best speed',DB.tot.best+'x'],
+   ['Avg tap',rts.length?Math.round(rts.reduce(function(a,b){return a+b},0)/rts.length)+' ms':'–'],
+   ['Sessions',DB.tot.sessions]];
+  $('ov1').innerHTML=cards.map(function(c){
+    return '<div class="card2"><small style="margin:0">'+c[0]+'</small><div>'+c[1]+'</div></div>'}).join('');
+  $('ov2').innerHTML=ORDER.map(function(key){
+    var w=LEVELS[key].w,m=w.filter(function(x){return DB.stats[x]&&DB.stats[x].box>=4}).length;
+    var pc=Math.round(100*m/w.length);
+    return '<div style="margin-bottom:11px"><small style="margin:0">'+LEVELS[key].n+' — '+m+'/'+w.length+
+      ' ('+pc+'%)</small><div class="mini"><i style="width:'+pc+'%"></i></div></div>'}).join('');
+  var slow=ws.filter(function(w){return DB.stats[w].rt}).sort(function(a,b){
+    return DB.stats[b].rt-DB.stats[a].rt}).slice(0,12);
+  $('ov3').innerHTML=slow.length?('<table><tr><th>Word</th><th>Tap time</th><th>Reps</th></tr>'+
+    slow.map(function(w){return '<tr><td>'+w+'</td><td>'+Math.round(DB.stats[w].rt)+
+      ' ms</td><td>'+DB.stats[w].s+'</td></tr>'}).join('')+'</table>'):'<small>No tap data yet.</small>';
+}
+$('exp').onclick=function(){var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(DB)],{type:'application/json'}));
+  a.download='eye-trainer-progress.json';a.click()};
+$('imp').onclick=function(){$('file').click()};
+$('file').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){try{var p=JSON.parse(r.result);DB.stats=p.stats||{};
+    DB.tot=Object.assign(DB.tot,p.tot||{});
+    for(var q in DEF)S[q]=(p.set&&p.set[q]!==undefined)?p.set[q]:DEF[q];
+    save();ui();drawStats();alert('Progress restored.')}catch(x){alert('That file did not work.')}};
+  r.readAsText(f)};
+$('wipe').onclick=function(){if(confirm('Erase all progress?')){DB.stats={};
+  DB.tot={words:0,best:1,sessions:0};save();drawStats()}};
+
+/* ================= 16-MINUTE DRILL ================= */
+(function(){
+  var MIN=[{mode:'Comprehension Speed',mult:1,dir:'Forward',goal:'Normal reading with your hand pacing.'},
+   {mode:'2\u00d7 Speed',mult:2,dir:'Backward',goal:'Train eye agility.'},
+   {mode:'3\u00d7 Speed',mult:3,dir:'Backward',goal:'Pure motion \u2014 ignore meaning.'},
+   {mode:'Comprehension Speed',mult:1,dir:'Forward',goal:'Smooth flow \u2014 anchor learning.'}];
+  var PLAN=[{type:'intro',secs:20,mode:'Pre-Drill Mindset',dir:'Relax',
+    goal:'This is a training drill, not a test. Confusion means your brain is stretching.'}];
+  for(var s=1;s<=4;s++){
+    for(var m=0;m<4;m++)PLAN.push({type:'drill',secs:60,set:s,min:m+1,mode:MIN[m].mode,
+      mult:MIN[m].mult,dir:MIN[m].dir,goal:MIN[m].goal});
+    if(s<4)PLAN.push({type:'rest',secs:30,set:s,mode:'Breathe \u0026 relax',dir:'Rest',
+      goal:'Close your eyes or look far away. Slow blinks.'});
+  }
+  var on=false,pi=0,left=0,pz=false,it=null,wt=null,wi=0,useW=false,W=[],c16=$('c16'),AC=null,cj=0;
+  function beep(f,d){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.connect(g);g.connect(AC.destination);
+    g.gain.value=.12;o.start();o.stop(AC.currentTime+d)}catch(e){}}
+  function mmss(t){t=Math.max(0,Math.ceil(t));return (t/60|0)+':'+String(t%60).padStart(2,'0')}
+  function tot(){var t=left;for(var i=pi+1;i<PLAN.length;i++)t+=PLAN[i].secs;return t}
+  function render(){
+    var p=PLAN[pi];
+    $('d16set').textContent=p.type==='drill'?('SET '+p.set+' OF 4  \u00b7  MINUTE '+p.min+' OF 4'):
+      (p.type==='rest'?'REST AFTER SET '+p.set:'GET READY');
+    $('d16mode').textContent=p.mode;
+    $('d16dir').textContent=(p.dir==='Relax'||p.dir==='Rest')?'':p.dir.toUpperCase()+' \u00b7 HAND PACING';
+    $('d16goal').textContent=p.goal;
+    $('d16cd').textContent=mmss(left);
+    $('d16tot').textContent='total left '+mmss(tot());
+    $('d16pb').style.width=(100*(1-left/p.secs))+'%';
+    if(!(useW&&p.type==='drill'))c16.style.display='none';
+  }
+  function loop(){
+    clearTimeout(wt);if(!on)return;
+    var p=PLAN[pi];
+    if(!useW||p.type!=='drill'){c16.style.display='none';wt=setTimeout(loop,300);return}
+    if(!pz){
+      var w=(p.dir==='Backward')?W[W.length-1-(wi%W.length)]:W[wi%W.length];wi++;
+      c16.style.display='inline-block';
+      c16.textContent=S.caps?w.toUpperCase():w;
+      c16.style.fontSize='clamp(26px,'+Math.min(12,80/Math.max(2,w.length))+'vw,80px)';
+      c16.style.background=S.pastel?PAS[cj++%PAS.length]:'var(--pan)';
+      c16.style.animation='none';void c16.offsetWidth;c16.style.animation='pop .28s';
+    }
+    wt=setTimeout(loop,Math.round(1000/p.mult));
+  }
+  function next(){pi++;if(pi>=PLAN.length)return done16();
+    left=PLAN[pi].secs;wi=0;beep(PLAN[pi].type==='rest'?520:880,.16);render()}
+  function tick(){if(pz)return;left-=0.1;if(left<=0)return next();
+    if(left<3.05&&left>2.95)beep(660,.07);render()}
+  function stop(){on=false;clearInterval(it);clearTimeout(wt);it=wt=null;
+    $('d16').classList.remove('on');c16.style.display='none'}
+  function done16(){
+    stop();$('d16set').textContent='';$('d16mode').textContent='16-minute drill complete';
+    $('d16dir').textContent='';$('d16goal').textContent='Four sets of four minutes done. Rest your eyes, then say out loud what you remember.';
+    $('d16cd').textContent='\u2713';$('d16tot').textContent='';$('d16pb').style.width='100%';
+    $('d16').classList.add('on');beep(990,.45);
+  }
+  function run(w){
+    useW=w;W=buildQ();if(!W.length)W=LEVELS.pre.w.slice();
+    pi=0;left=PLAN[0].secs;pz=false;on=true;wi=0;
+    if(running&&!paused)pause();
+    $('d16p').textContent='Pause';$('d16').classList.add('on');render();
+    it=setInterval(tick,100);loop();beep(880,.16);
+  }
+  $('d16p').onclick=function(){pz=!pz;this.textContent=pz?'Resume':'Pause'};
+  $('d16s').onclick=function(){next()};
+  $('d16x').onclick=function(){stop()};
+  var b1=document.createElement('button');b1.className='p';b1.textContent='Start with my book';
+  b1.onclick=function(){run(false)};
+  var b2=document.createElement('button');b2.textContent='Start with word cards';
+  b2.onclick=function(){run(true)};
+  $('d16Row').appendChild(b1);$('d16Row').appendChild(b2);
+})();
+/* ================= GO ================= */
+ui();reset();
+/* ---- EYE-COMFORT COLOURS ---- */
+(function(){
+  var T={
+    cream :{n:'Cream paper',      v:{bg:'#f6efe0',bg2:'#eee5d2',pan:'#fffaf0',ln:'#e2d6bf',tx:'#37312a',dm:'#7f7566',ac:'#0f766e',acT:'#fff'}},
+    sand  :{n:'Sand — low glare', v:{bg:'#ece3d2',bg2:'#e0d5c0',pan:'#f5efe2',ln:'#d3c5ac',tx:'#3a342b',dm:'#786d5c',ac:'#3f6212',acT:'#fff'}},
+    sepia :{n:'Sepia — warm',     v:{bg:'#e9d9bd',bg2:'#dfcbaa',pan:'#f3e8d2',ln:'#cfb997',tx:'#3d3124',acT:'#fff',dm:'#7b6a52',ac:'#9a3412'}},
+    mint  :{n:'Mint — calm',      v:{bg:'#e4ece4',bg2:'#d6e2d6',pan:'#eff4ee',ln:'#c4d4c4',tx:'#2c332c',dm:'#6d7a6d',ac:'#166534',acT:'#fff'}},
+    blue  :{n:'Soft blue-grey',   v:{bg:'#e6eaef',bg2:'#d9dfe7',pan:'#f1f4f8',ln:'#c6cfda',tx:'#2b3037',dm:'#6f7885',ac:'#1d4ed8',acT:'#fff'}},
+    grey  :{n:'Grey — lowest contrast', v:{bg:'#dcdcd8',bg2:'#d0d0cb',pan:'#e7e7e3',ln:'#bebeb8',tx:'#3b3b38',dm:'#75756f',ac:'#4b5563',acT:'#fff'}},
+    dusk  :{n:'Dusk — evening',   v:{bg:'#2a2725',bg2:'#211f1d',pan:'#332f2c',ln:'#463f39',tx:'#e6ddcf',dm:'#9c9184',ac:'#e2a03f',acT:'#241f1a'}},
+    night :{n:'Night — dark room',v:{bg:'#14161b',bg2:'#0f1116',pan:'#1b1f27',ln:'#2b3140',tx:'#dcd8d0',dm:'#8b929f',ac:'#4ade80',acT:'#0b150e'}}
+  };
+  var order=['cream','sand','sepia','mint','blue','grey','dusk','night'];
+
+  var veil=document.createElement('div');
+  veil.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:9999;mix-blend-mode:multiply';
+  document.body.appendChild(veil);
+
+  S.pal=S.pal||'cream';
+  if(S.dim===undefined)S.dim=0;
+  if(S.warm===undefined)S.warm=8;
+  if(S.big===undefined)S.big=0;
+
+  function apply(){
+    var v=T[S.pal].v, r=document.documentElement.style;
+    document.body.className='';
+    for(var k in v) r.setProperty('--'+k, v[k]);
+    var w=S.warm/100;
+    veil.style.background='rgba(255,'+Math.round(255-70*w)+','+Math.round(255-150*w)+',1)';
+    veil.style.opacity=(S.dim/100*0.55 + w*0.35).toFixed(3);
+    r.setProperty('--wt', S.big? '800':'700');
+    document.querySelectorAll('#disp,#c16').forEach(function(e){
+      e.style.letterSpacing=S.big?'0.05em':'0.02em';});
+    if(pName)pName.textContent=T[S.pal].n;
+    if(dimV)dimV.textContent=S.dim+'%';
+    if(warmV)warmV.textContent=S.warm+'%';
+    save();
+  }
+
+  var sec=document.createElement('section');
+  sec.innerHTML='<h2>Eye comfort</h2>'+
+   '<div class="row" style="padding:0 0 6px" id="palRow"></div>'+
+   '<label class="f">Dim the screen <span id="dimV" style="color:var(--tx)"></span>'+
+     '<input type="range" id="dimR" min="0" max="70" step="5"></label>'+
+   '<label class="f" style="margin-top:10px">Warm filter (less blue) <span id="warmV" style="color:var(--tx)"></span>'+
+     '<input type="range" id="warmR" min="0" max="60" step="5"></label>'+
+   '<label class="c" style="margin-top:6px"><input type="checkbox" id="bigL"> Wider letter spacing (easier on tired eyes)</label>'+
+   '<small>Set the dimmer until the screen looks the same brightness as a paper book in your room. Warm filter cuts blue light, which is what makes eyes ache in the evening.</small>';
+  document.getElementById('s-set').prepend(sec);
+
+  var pName=null,dimV=document.getElementById('dimV'),warmV=document.getElementById('warmV');
+  order.forEach(function(k){
+    var b=document.createElement('button');b.textContent=T[k].n;
+    b.onclick=function(){S.pal=k;apply();paintP()};
+    document.getElementById('palRow').appendChild(b);
+    T[k].btn=b;
+  });
+  function paintP(){order.forEach(function(k){T[k].btn.classList.toggle('p',k===S.pal)})}
+
+  document.getElementById('dimR').oninput=function(){S.dim=+this.value;apply()};
+  document.getElementById('warmR').oninput=function(){S.warm=+this.value;apply()};
+  document.getElementById('bigL').onchange=function(){S.big=this.checked?1:0;apply()};
+  document.getElementById('dimR').value=S.dim;
+  document.getElementById('warmR').value=S.warm;
+  document.getElementById('bigL').checked=!!S.big;
+
+  document.getElementById('th').onclick=function(){
+    S.pal=order[(order.indexOf(S.pal)+1)%order.length];apply();paintP();
+  };
+  apply();paintP();
+})();
+/* ---- EYE BREAK WATCHDOG: 20-20-20 + full exercise + stop ---- */
+(function(){
+  if(S.b20===undefined)S.b20=20;      // short look-away every N minutes
+  if(S.bEx===undefined)S.bEx=50;      // full exercise every N minutes
+  if(S.bStop===undefined)S.bStop=90;  // suggest stopping after N minutes
+  if(S.bOn===undefined)S.bOn=1;
+  save();
+
+  var css=document.createElement('style');
+  css.textContent=
+  '#eb{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;align-items:center;'+
+   'justify-content:center;text-align:center;padding:22px;'+
+   'background:radial-gradient(120% 90% at 50% 40%,var(--pan),var(--bg) 62%,var(--bg2))}'+
+  '#eb.on{display:flex}'+
+  '#eb .kick{color:var(--ac);font-size:11.5px;letter-spacing:3px;font-weight:700}'+
+  '#eb .ti{font-size:clamp(22px,6.5vw,38px);font-weight:800;margin:8px 0 4px;max-width:640px}'+
+  '#eb .su{color:var(--dm);font-size:15px;max-width:460px;line-height:1.6}'+
+  '#eb .cd{font-size:clamp(46px,15vw,92px);font-weight:800;line-height:1;margin:14px 0 2px;'+
+   'font-variant-numeric:tabular-nums}'+
+  '#eb .pb{width:min(520px,84vw);height:7px;background:var(--ln);border-radius:9px;overflow:hidden;margin:12px 0}'+
+  '#eb .pb i{display:block;height:100%;background:var(--ac);width:0;transition:width .25s linear}'+
+  '#eb .st{color:var(--dm);font-size:12px;letter-spacing:1.5px}'+
+  '#ebChip{cursor:pointer}';
+  document.head.appendChild(css);
+
+  var ov=document.createElement('div');ov.id='eb';
+  ov.innerHTML='<div class="kick" id="ebK"></div><div class="ti" id="ebT"></div>'+
+   '<div class="su" id="ebS"></div><div class="cd" id="ebC">20</div>'+
+   '<div class="pb"><i id="ebP"></i></div><div class="st" id="ebSt"></div>'+
+   '<div class="row"><button id="ebSkip">Skip</button><button id="ebSnz">Snooze 3 min</button>'+
+   '<button id="ebEnd" class="p">Finish for now</button></div>';
+  document.body.appendChild(ov);
+
+  var chip=document.createElement('span');chip.id='ebChip';
+  chip.innerHTML='eyes on <b id="ebOn">0:00</b> · break in <b id="ebNx">–</b>';
+  document.getElementById('hud').appendChild(chip);
+
+  var SHORT=[{t:'Look far away',s:'Find something at least six metres away — a window, a door, the far wall. Let your eyes settle on it and blink slowly.',secs:20}];
+  var FULL=[
+   {t:'Slow full blinks',s:'Close gently, hold two seconds, open. Ten times. This spreads tears back over a dry eye surface.',secs:22},
+   {t:'Palming',s:'Cup your closed eyes with your palms. No pressure on the eyeball. Just darkness and warmth.',secs:30},
+   {t:'Figure of eight',s:'Trace a big lazy 8 on the far wall with your eyes only. Keep your head still. Slow and smooth.',secs:22},
+   {t:'Near and far',s:'Thumb at 20 cm, then something across the room. Swap every two seconds. This relaxes the focusing muscle.',secs:30},
+   {t:'Roll your shoulders',s:'Sit back, drop your shoulders, roll them twice each way. Neck tension travels straight to the eyes.',secs:18},
+   {t:'Look far away',s:'One last long look at the furthest thing you can see. Blink slowly until the timer ends.',secs:20}];
+
+  var eyeMs=0,s20=0,sEx=0,busy=false,stopped=false,AC=null;
+  function beep(f,d){ if(!S.sound)return; try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.connect(g);
+    g.connect(AC.destination);g.gain.value=.11;o.start();o.stop(AC.currentTime+d);}catch(e){} }
+  function mm(t){t=Math.max(0,Math.ceil(t));return (t/60|0)+':'+String(t%60).padStart(2,'0')}
+
+  function active(){
+    if(busy||document.hidden)return false;
+    if(running&&!paused)return true;
+    var d=document.getElementById('d16');
+    if(d&&d.classList.contains('on')&&document.getElementById('d16p').textContent==='Pause')return true;
+    return false;
+  }
+
+  var resumeDrill=false,resume16=false;
+  function holdAll(){
+    resumeDrill=false;resume16=false;
+    if(running&&!paused){pause();resumeDrill=true}
+    var b=document.getElementById('d16p');
+    if(document.getElementById('d16').classList.contains('on')&&b.textContent==='Pause'){b.click();resume16=true}
+  }
+  function letGo(){
+    if(resumeDrill)start();
+    if(resume16){var b=document.getElementById('d16p');if(b.textContent==='Resume')b.click()}
+    resumeDrill=resume16=false;
+  }
+
+  var seq=[],si=0,left=0,tm=null,onDone=null;
+  function draw(){
+    var p=seq[si];
+    document.getElementById('ebT').textContent=p.t;
+    document.getElementById('ebS').textContent=p.s;
+    document.getElementById('ebC').textContent=Math.ceil(left);
+    document.getElementById('ebP').style.width=(100*(1-left/p.secs))+'%';
+    document.getElementById('ebSt').textContent=seq.length>1?('step '+(si+1)+' of '+seq.length):'';
+  }
+  function step(){
+    left-=0.25;
+    if(left<=0){
+      si++;
+      if(si>=seq.length){endBreak();return}
+      left=seq[si].secs;beep(760,.1);
+    }
+    draw();
+  }
+  function runBreak(list,kick,cb){
+    busy=true;onDone=cb||null;holdAll();
+    seq=list;si=0;left=seq[0].secs;
+    document.getElementById('ebK').textContent=kick;
+    document.getElementById('eb').classList.add('on');
+    document.getElementById('ebEnd').style.display=(list===FULL)?'inline-block':'none';
+    document.getElementById('ebSnz').style.display='inline-block';
+    draw();beep(880,.16);
+    clearInterval(tm);tm=setInterval(step,250);
+  }
+  function endBreak(){
+    clearInterval(tm);tm=null;
+    document.getElementById('eb').classList.remove('on');
+    busy=false;beep(1040,.22);
+    if(onDone)onDone();onDone=null;
+    letGo();
+  }
+  document.getElementById('ebSkip').onclick=endBreak;
+  document.getElementById('ebSnz').onclick=function(){s20=Math.max(0,s20-180000);sEx=Math.max(0,sEx-180000);endBreak()};
+  document.getElementById('ebEnd').onclick=function(){
+    eyeMs=0;s20=0;sEx=0;stopped=false;resumeDrill=false;resume16=false;
+    if(running)finish('finished for today');
+    var d=document.getElementById('d16');
+    if(d.classList.contains('on'))document.getElementById('d16x').click();
+    endBreak();
+  };
+
+  setInterval(function(){
+    if(active()){ eyeMs+=1000; s20+=1000; sEx+=1000; }
+    document.getElementById('ebOn').textContent=mm(eyeMs/1000);
+    var nx=Math.min(S.b20*60000-s20, S.bEx*60000-sEx);
+    document.getElementById('ebNx').textContent=S.bOn?mm(nx/1000):'off';
+    if(!S.bOn||busy)return;
+    if(!stopped && eyeMs>=S.bStop*60000){
+      stopped=true;
+      runBreak([{t:'That is enough for today',s:'You have been reading for '+Math.round(eyeMs/60000)+
+        ' minutes. Speed drills are like sprints — more now will not make you faster, it will just make your eyes sore. Come back in a few hours.',secs:25}],
+        'TIME TO STOP');
+      return;
+    }
+    if(sEx>=S.bEx*60000){ sEx=0;s20=0; runBreak(FULL,'FULL EYE EXERCISE · ABOUT 2 MINUTES'); return; }
+    if(s20>=S.b20*60000){ s20=0; runBreak(SHORT,'20-20-20 BREAK'); return; }
+  },1000);
+
+  chip.onclick=function(){ if(!busy)runBreak(FULL,'FULL EYE EXERCISE · ABOUT 2 MINUTES') };
+
+  var sec=document.createElement('section');
+  sec.innerHTML='<h2>Eye breaks — how long before I must rest</h2>'+
+   '<div class="g">'+
+   '<label class="f">Short look-away every (min)<input type="number" id="eb20" min="5" max="40" step="1"></label>'+
+   '<label class="f">Full exercise every (min)<input type="number" id="ebEx" min="15" max="120" step="5"></label>'+
+   '<label class="f">Tell me to stop after (min)<input type="number" id="ebSp" min="30" max="240" step="10"></label>'+
+   '</div>'+
+   '<label class="c"><input type="checkbox" id="ebOnc"> Force eye breaks (keep this on)</label>'+
+   '<small>The clock only runs while words are actually moving, so pauses do not count against you. '+
+   'Tap the "eyes on" counter beside the timer any time you want the full exercise early.</small>';
+  document.getElementById('s-set').appendChild(sec);
+  document.getElementById('eb20').value=S.b20;
+  document.getElementById('ebEx').value=S.bEx;
+  document.getElementById('ebSp').value=S.bStop;
+  document.getElementById('ebOnc').checked=!!S.bOn;
+  document.getElementById('eb20').onchange=function(){S.b20=+this.value||20;save()};
+  document.getElementById('ebEx').onchange=function(){S.bEx=+this.value||50;save()};
+  document.getElementById('ebSp').onchange=function(){S.bStop=+this.value||90;save()};
+  document.getElementById('ebOnc').onchange=function(){S.bOn=this.checked?1:0;save()};
+
+  var wu=document.getElementById('wu');
+  var b=document.createElement('button');b.textContent='Eye break now';
+  b.onclick=function(){if(!busy)runBreak(FULL,'FULL EYE EXERCISE · ABOUT 2 MINUTES')};
+  wu.parentNode.insertBefore(b,wu.nextSibling);
+})();
+/* ---- FIXED CONTROL BAR ---- */
+(function(){
+  var css=document.createElement('style');
+  css.textContent=
+  '#cbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:8px;justify-content:center;'+
+   'align-items:center;padding:10px 10px calc(10px + env(safe-area-inset-bottom));'+
+   'background:var(--pan);border-top:1px solid var(--ln);box-shadow:0 -6px 20px rgba(0,0,0,.13)}'+
+  '#cbar button{background:var(--bg);border:1px solid var(--ln);color:var(--tx);border-radius:13px;'+
+   'padding:14px 16px;font-size:15px;font-weight:700;flex:1;max-width:140px}'+
+  '#cbar button#cGo{background:var(--ac);color:var(--acT);border-color:transparent;max-width:210px;font-size:17px}'+
+  '#cbar .mini2{flex:0 0 auto;max-width:60px;font-size:18px;padding:14px 12px}'+
+  'body{padding-bottom:86px}'+
+  '#stage{height:40vh;min-height:200px}';
+  document.head.appendChild(css);
+
+  var bar=document.createElement('div');bar.id='cbar';
+  bar.innerHTML='<button class="mini2" id="cDn">&#9660;</button>'+
+    '<button id="cGo">Start</button>'+
+    '<button class="mini2" id="cUp">&#9650;</button>'+
+    '<button id="cRs">Restart</button>';
+  document.body.appendChild(bar);
+
+  var go=document.getElementById('go');
+  document.getElementById('cGo').onclick=function(){go.click()};
+  document.getElementById('cRs').onclick=function(){document.getElementById('rs').click()};
+  document.getElementById('cUp').onclick=function(){
+    autoStep=false;sIdx=Math.min(6,sIdx+1);S.sIdx=sIdx;save();paintSpd();hud()};
+  document.getElementById('cDn').onclick=function(){
+    autoStep=false;sIdx=Math.max(0,sIdx-1);S.sIdx=sIdx;save();paintSpd();hud()};
+
+  // keep the bar's label matching the real button, and hide it during overlays
+  setInterval(function(){
+    document.getElementById('cGo').textContent=go.textContent;
+    var busy=document.getElementById('eb').classList.contains('on')||
+             document.getElementById('d16').classList.contains('on')||
+             document.getElementById('ov').classList.contains('on');
+    bar.style.display=busy?'none':'flex';
+  },200);
+
+  go.style.display='none';
+  document.getElementById('rs').style.display='none';
+})();
+/* ---- 16-MIN DRILL: rewind controls ---- */
+(function(){
+  var row=document.getElementById('d16Row');
+  var sBtns=row.querySelectorAll('button');
+  var lastMode=1;
+  sBtns[0].addEventListener('click',function(){lastMode=0});
+  sBtns[1].addEventListener('click',function(){lastMode=1});
+
+  var css=document.createElement('style');
+  css.textContent='#d16 .row{max-width:600px;flex-wrap:wrap}'+
+    '#d16 .row button{padding:11px 14px;font-size:14px}'+
+    '#d16 .row button.warn{border-color:var(--ac);color:var(--ac)}';
+  document.head.appendChild(css);
+
+  function curIdx(){
+    var t=document.getElementById('d16set').textContent||'';
+    var s=t.match(/SET (\d)/), m=t.match(/MINUTE (\d)/);
+    if(s&&m) return 1+(+s[1]-1)*5+(+m[1]-1);
+    if(s) return 1+(+s[1]-1)*5+4;      // rest phase
+    return 0;                           // intro
+  }
+  function live(){ return document.getElementById('d16').classList.contains('on') }
+
+  function jumpTo(idx){
+    var snd=S.sound; S.sound=0;                 // no beep spam while jumping
+    if(live())document.getElementById('d16x').click();
+    sBtns[lastMode].click();
+    for(var i=0;i<idx;i++)document.getElementById('d16s').click();
+    S.sound=snd;
+    var p=document.getElementById('d16p');
+    if(p.textContent==='Pause')p.click();       // land paused, so you get ready
+  }
+
+  var ctl=document.querySelector('#d16 .row');
+  function add(label,fn,warn){
+    var b=document.createElement('button');
+    b.textContent=label; if(warn)b.className='warn';
+    b.onclick=fn; ctl.appendChild(b); return b;
+  }
+  add('\u25c0 Back a minute',function(){ jumpTo(Math.max(0,curIdx()-1)) });
+  add('\u21bb Redo this minute',function(){ jumpTo(curIdx()) },1);
+  add('\u27f2 Start over',function(){
+    if(confirm('Start the whole 16-minute drill again from the beginning?'))jumpTo(0);
+  });
+
+  // make Skip clearer now that there are several buttons
+  document.getElementById('d16s').textContent='Skip \u25b6';
+})();
+
+</script>
+</body>
+</html>
